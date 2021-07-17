@@ -1,0 +1,23 @@
+language: generic 
+sudo: required
+services:
+  - docker
+
+before-install:
+  - docker build -t gjangra/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run gjangra/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t gjangra/multi-client ./client
+  - docker build -t gjangra/multi-nginx ./nginx
+  - docker build -t gjangra/multi-server ./server
+  - docker build -t gjangra/multi-worker ./worker
+  #LOGIN to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take those images and push them to Docker Hub
+  - docker push gjangra/multi-client
+  - docker push gjangra/multi-nginx
+  - docker push gjangra/multi-server
+  - docker push gjangra/multi-worker
